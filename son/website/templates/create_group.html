@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Grup Oluştur{% endblock %}
+{% block content %}
+<div class="container">
+    <h3 class="text-center">Grup Oluştur</h3>
+    {% if user.is_authenticated %}
+        <p>Hoş geldin, {{ user.first_name }}!</p>
+    {% endif %}
+    <form method="POST" action="{{ url_for('views.create_group') }}">
+        {{ form.hidden_tag() }}
+        <div class="form-group">
+            <label for="name">Grup Adı</label>
+            {{ form.name(class="form-control") }}
+        </div>
+        <div class="form-group" id="group_members">
+            <label for="group_members">Grup Üyeleri</label>
+            <div id="email_fields">
+                <div class="member-group d-flex align-items-center mb-2">
+                    <input type="email" name="emails" class="form-control flex-grow-1" placeholder="Üye Email 1" required>
+                    <button type="button" class="btn btn-outline-danger remove-member ml-2" style="visibility: hidden;">
+                        <i class="fa fa-trash"></i>
+                    </button>
+                </div>
+                {% for email_form in form.emails %}
+                    <div class="member-group d-flex align-items-center mb-2">
+                        {{ email_form.email(class="form-control flex-grow-1", placeholder="Üye Email " ~ loop.index) }}
+                        <button type="button" class="btn btn-outline-danger remove-member ml-2">
+                            <i class="fa fa-trash"></i>
+                        </button>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        <button type="button" class="btn btn-primary" onclick="addMember()">Üye Ekle</button>
+        <br><br>
+        <button type="submit" class="btn btn-primary">Grup Oluştur</button>
+    </form>
+</div>
+
+<script>
+    function addMember() {
+        const memberGroup = document.createElement('div');
+        memberGroup.className = 'member-group d-flex align-items-center mb-2';
+        
+        const input = document.createElement('input');
+        input.type = 'email';
+        input.name = 'emails-' + document.querySelectorAll('#group_members .member-group').length + '-email';  // FieldList yapısı için uygun name formatı
+        input.className = 'form-control flex-grow-1';
+        input.placeholder = `Üye Email ${document.querySelectorAll('#group_members .member-group').length + 1}`;
+        input.required = true; // Zorunlu alan
+        
+        const removeButton = document.createElement('button');
+        removeButton.type = 'button';
+        removeButton.className = 'btn btn-outline-danger remove-member ml-2';
+        removeButton.innerHTML = '<i class="fa fa-trash"></i>';
+        removeButton.onclick = function() {
+            memberGroup.remove();
+            // Üye eklendiğinde numaralandırma güncellenir
+            const members = document.querySelectorAll('#group_members .member-group input');
+            members.forEach((member, index) => {
+                member.placeholder = `Üye Email ${index + 1}`;
+            });
+        };
+        
+        memberGroup.appendChild(input);
+        memberGroup.appendChild(removeButton);
+        
+        document.getElementById('email_fields').appendChild(memberGroup);
+        
+        // İlk üye eklendiğinde "Üye Sil" butonunu görünür yap
+        const removeButtons = document.querySelectorAll('#group_members .member-group button.remove-member');
+        if (removeButtons.length === 1) {
+            removeButtons[0].style.visibility = 'visible';
+        }
+    }
+    
+    function removeMember(button) {
+        const memberGroup = button.parentElement;
+        memberGroup.remove();
+        // Üye eklendiğinde numaralandırma güncellenir
+        const members = document.querySelectorAll('#group_members .member-group input');
+        members.forEach((member, index) => {
+            member.placeholder = `Üye Email ${index + 1}`;
+        });
+    }
+</script>
+{% endblock %}
